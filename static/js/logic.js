@@ -12,7 +12,7 @@ L.tileLayer("https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_toke
     accessToken: API_KEY
 }).addTo(myMap);
 
-var url ='https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/1.0_week.geojson'
+var url = 'https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/1.0_week.geojson'
 d3.json(url, jsonData => {
     data = jsonData.features;
 
@@ -23,37 +23,17 @@ d3.json(url, jsonData => {
         var mag = obj.properties.mag;
         var place = obj.properties.place;
 
-
-        L.circle([lat, lng], {
+        var circle = L.circle([lat, lng], {
             color: 'black',
             weight: .3,
             fillColor: getColor(depth),
             fillOpacity: 1,
             radius: mag * 25000
-          }).addTo(myMap);
+        }).addTo(myMap);
 
-          var info = L.control();
-
-          info.onAdd = function (myMap) {
-              this._div = L.DomUtil.create('div', 'info'); // create a div with a class "info"
-              this.update();
-              return this._div;
-          };
-          
-          // method that we will use to update the control based on feature properties passed
-          info.update = function (obj) {
-              this._div.innerHTML = '<h4>lat</h4>' +  (obj ?
-                  '<b>' + lat + '</b><br />' + lat + ' people / mi<sup>2</sup>'
-                  : 'Hover over a state');
-          };
-          
-          info.addTo(myMap);
-          
-
-
-
-
-
+        circle.bindPopup(`<h3>${place}</h3><h3>Magnitude: ${mag}</h3>`);
+       
+       
     });
     // Create a circle and pass in some initial options
 })
@@ -61,58 +41,33 @@ d3.json(url, jsonData => {
 
 function getColor(depth) {
     return depth > 140 ? '#800026' :
-           depth > 120  ? '#BD0026' :
-           depth > 100  ? '#E31A1C' :
-           depth > 80  ? '#FC4E2A' :
-           depth > 60   ? '#FD8D3C' :
-           depth > 40   ? '#FEB24C' :
-           depth > 20   ? '#FED976' :
-                      '#FFEDA0';
+        depth > 120 ? '#BD0026' :
+            depth > 100 ? '#E31A1C' :
+                depth > 80 ? '#FC4E2A' :
+                    depth > 60 ? '#FD8D3C' :
+                        depth > 40 ? '#FEB24C' :
+                            depth > 20 ? '#FED976' :
+                                '#FFEDA0';
 }
 
-// var info = L.control();
 
-// info.onAdd = function (myMap) {
-//     this._div = L.DomUtil.create('div', 'info'); // create a div with a class "info"
-//     this.update();
-//     return this._div;
-// };
+// Set up the legend
+var legend = L.control({ position: 'bottomright' });
 
-// // method that we will use to update the control based on feature properties passed
-// info.update = function (props) {
-//     this._div.innerHTML = '<h4>US Population Density</h4>' +  (props ?
-//         '<b>' + props.name + '</b><br />' + props.density + ' people / mi<sup>2</sup>'
-//         : 'Hover over a state');
-// };
+legend.onAdd = function (myMap) {
 
-// info.addTo(myMap);
+    var div = L.DomUtil.create('div', 'info legend'),
+        mag = [0, 20, 40, 60, 80, 100, 120, 140],
+        labels = [];
 
+    // loop through our density intervals and generate a label with a colored square for each interval
+    for (var i = 0; i < mag.length; i++) {
+        div.innerHTML +=
+            '<i style="background:' + getColor(mag[i] + 1) + '"></i> ' +
+            mag[i] + (mag[i + 1] ? '&ndash;' + mag[i + 1] + '<br>' : '+');
+    }
 
+    return div;
+};
 
-
-
-
-
-
-
-
-  // Set up the legend
-  var legend = L.control({position: 'bottomright'});
-
-  legend.onAdd = function (myMap) {
-  
-      var div = L.DomUtil.create('div', 'info legend'),
-          mag = [0, 20, 40, 60, 80, 100, 120, 140],
-          labels = [];
-  
-      // loop through our density intervals and generate a label with a colored square for each interval
-      for (var i = 0; i < mag.length; i++) {
-          div.innerHTML +=
-              '<i style="background:' + getColor(mag[i] + 1) + '"></i> ' +
-              mag[i] + (mag[i + 1] ? '&ndash;' + mag[i + 1] + '<br>' : '+');
-      }
-  
-      return div;
-  };
-  
-  legend.addTo(myMap);
+legend.addTo(myMap);
